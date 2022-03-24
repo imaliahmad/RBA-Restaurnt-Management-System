@@ -1,0 +1,113 @@
+﻿@model IEnumerable<UserInterface.ViewModels.ItemsVM>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<br />
+<div class="container-fluid">
+    @if (User.IsInRole("Manager"))
+    {
+       <p>
+        <a class="btn btn-danger btn-create" asp-action="CreateOrEdit"><i class="fas fa-plus"></i> Add New</a>
+       </p>
+    }    
+    @if (Model.Count() > 0)
+    {
+        foreach (var itemList in Model.GroupBy(x => x.Course))
+        {
+            <p>Course: <b>@itemList.Key.ToString()</b></p>
+            <table class="table table-bordered table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => itemList.FirstOrDefault().Name)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => itemList.FirstOrDefault().Description)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => itemList.FirstOrDefault().Price)
+                        </th>
+
+                        <th>
+                            @Html.DisplayNameFor(model => itemList.FirstOrDefault().InStock)
+                        </th>
+                        <th width="260" class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="tableBody">
+                    @foreach (var item in itemList)
+                    {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Description)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Price)
+                        </td>
+
+                        <td>
+                            @Html.DisplayFor(modelItem => item.InStock)
+                        </td>
+                        @if (User.IsInRole("Manager"))
+                        {
+                            <td class="text-center">
+                                <a class="btn btn-info btn-sm btn-edit" asp-controller="Items" asp-action="CreateOrEdit" asp-route-id="@item.ItemId"><i class="fas fa-pencil-alt"></i> </a> |
+                                <a class="btn btn-danger btn-sm btn-delete" asp-controller="Items" asp-action="Delete" asp-route-id="@item.ItemId" onclick="return confirmDelete()"><i class="fas fa-trash-alt"></i> </a>
+                            </td>
+                        }
+                        else
+                        {
+                            string addToCartLink = string.Empty;
+                            if (item.InStock == 0)
+                            {
+                                addToCartLink = "disabled";
+                            }
+                            <td class="text-center">
+                                <a class="btn btn-sm btn btn-secondary @addToCartLink" asp-controller="Cart" asp-action="AddToCart" asp-route-itemId="@item.ItemId"><i class="fas fa-cart-plus"></i></a>
+                            </td>
+                        }
+
+                    </tr>
+                    }
+
+
+                </tbody>
+            </table>
+        }
+    }
+    else
+    {
+        <p>No item found.</p>
+    }
+
+
+</div>
+
+
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        var msg = "@TempData["SuccessMsg"].ToString()";
+        Swal.fire({ title: "Success!", text: msg, icon: "success" });
+    </script>
+}
+@if (TempData["ErrorMsg"] != null)
+{
+    <script>
+        var msg = "@TempData["ErrorMsg"].ToString()";
+        Swal.fire({ title: "Error!", text: msg, icon: "error" });
+    </script>
+}
+<script>
+    function confirmDelete() {
+
+        var res = confirm("Are you sure, you want to delete this record?");
+        return res;
+    }
+</script>
